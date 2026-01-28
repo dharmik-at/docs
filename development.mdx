@@ -1,94 +1,192 @@
 ---
-title: 'Development'
-description: 'Preview changes locally to update your docs'
+title: "Development"
+description: "Local development setup and contribution guidelines"
 ---
 
-<Info>
-  **Prerequisites**:
-  - Node.js version 19 or higher
-  - A docs repository with a `docs.json` file
-</Info>
+## Development Setup
 
-Follow these steps to install and run Mintlify on your operating system.
+### Prerequisites
 
-<Steps>
-<Step title="Install the Mintlify CLI">
+- Node.js 18 or later (check with `node --version`)
+- Docker & Docker Compose
+- PostgreSQL client (optional, for direct DB access)
 
-```bash
-npm i -g mint
-```
-</Step>
-
-<Step title="Preview locally">
-
-Navigate to your docs directory where your `docs.json` file is located, and run the following command:
+### Clone and Install
 
 ```bash
-mint dev
+git clone https://github.com/avesta-hq/ingestiq-backend.git
+cd ingestiq-backend
+npm install
 ```
 
-A local preview of your documentation will be available at `http://localhost:3000`.
-
-</Step>
-</Steps>
-
-## Custom ports
-
-By default, Mintlify uses port 3000. You can customize the port Mintlify runs on by using the `--port` flag. For example, to run Mintlify on port 3333, use this command:
+### Environment Configuration
 
 ```bash
-mint dev --port 3333
+cp .env.example .env
 ```
 
-If you attempt to run Mintlify on a port that's already in use, it will use the next available port:
+Configure your local environment variables. See [Configuration Reference](/self-hosting/configuration) for all options.
 
-```md
-Port 3000 is already in use. Trying 3001 instead.
-```
-
-## Mintlify versions
-
-Please note that each CLI release is associated with a specific version of Mintlify. If your local preview does not align with the production version, please update the CLI:
+### Start Development Services
 
 ```bash
-npm mint update
+# Start infrastructure (DB, Redis, NATS, MinIO)
+docker compose up -d
+
+# Run migrations
+npm run db:migrate
+
+# Seed data
+npm run db:seed
+
+# Start dev server with hot reload
+npm run dev
 ```
 
-## Validating links
+## Project Structure
 
-The CLI can assist with validating links in your documentation. To identify any broken links, use the following command:
+```
+ingestiq-backend/
+├── src/
+│   ├── application/      # Use Cases (business logic)
+│   ├── domain/           # Entities & interfaces
+│   ├── infrastructure/   # Database & external services
+│   ├── presentation/     # Controllers & routes
+│   ├── common/           # Shared utilities
+│   ├── mcp/              # MCP Server
+│   ├── nats-events/      # Event handlers
+│   └── scheduler/        # Job scheduling
+├── tests/                # Test suites
+├── docs/                 # Documentation
+└── docker-compose.yml    # Local services
+```
+
+## Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server with hot reload |
+| `npm run build` | Build for production |
+| `npm start` | Start production server |
+| `npm test` | Run test suite |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:coverage` | Run tests with coverage report |
+| `npm run lint` | Run ESLint |
+| `npm run lint:fix` | Fix linting issues |
+| `npm run db:migrate` | Run database migrations |
+| `npm run db:migrate:undo` | Rollback last migration |
+| `npm run db:seed` | Run database seeders |
+
+## Database Migrations
+
+### Create a New Migration
 
 ```bash
-mint broken-links
+npx sequelize-cli migration:generate --name your-migration-name
 ```
 
-## Deployment
+### Run Migrations
 
-If the deployment is successful, you should see the following:
+```bash
+# Run all pending migrations
+npm run db:migrate
 
-<Frame>
-  <img src="/images/checks-passed.png" alt="Screenshot of a deployment confirmation message that says All checks have passed." style={{ borderRadius: '0.5rem' }} />
-</Frame>
+# Undo last migration
+npm run db:migrate:undo
 
-## Code formatting
+# Undo all migrations
+npm run db:migrate:undo:all
+```
 
-We suggest using extensions on your IDE to recognize and format MDX. If you're a VSCode user, consider the [MDX VSCode extension](https://marketplace.visualstudio.com/items?itemName=unifiedjs.vscode-mdx) for syntax highlighting, and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) for code formatting.
+## Testing
 
-## Troubleshooting
+### Run All Tests
 
-<AccordionGroup>
-  <Accordion title='Error: Could not load the "sharp" module using the darwin-arm64 runtime'>
+```bash
+npm test
+```
 
-    This may be due to an outdated version of node. Try the following:
-    1. Remove the currently-installed version of the CLI: `npm remove -g mint`
-    2. Upgrade to Node v19 or higher.
-    3. Reinstall the CLI: `npm i -g mint`
-  </Accordion>
+### Run Specific Tests
 
-  <Accordion title="Issue: Encountering an unknown error">
-  
-    Solution: Go to the root of your device and delete the `~/.mintlify` folder. Then run `mint dev` again.
-  </Accordion>
-</AccordionGroup>
+```bash
+# Run tests matching a pattern
+npm test -- --testPathPattern="knowledgebase"
 
-Curious about what changed in the latest CLI version? Check out the [CLI changelog](https://www.npmjs.com/package/mintlify?activeTab=versions).
+# Run a single test file
+npm test -- tests/unit/useCases/knowledgebase.test.ts
+```
+
+### Test Coverage
+
+```bash
+npm run test:coverage
+```
+
+Coverage reports are generated in the `coverage/` directory.
+
+## Code Style
+
+The project uses ESLint and Prettier for consistent code style.
+
+```bash
+# Check for issues
+npm run lint
+
+# Auto-fix issues
+npm run lint:fix
+```
+
+### Commit Hooks
+
+Husky is configured to run linting before commits. Commits that don't pass linting will be rejected.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests (`npm test`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+See [CONTRIBUTING.md](https://github.com/avesta-hq/ingestiq-backend/blob/main/CONTRIBUTING.md) for detailed guidelines.
+
+## Debugging
+
+### VS Code Launch Configuration
+
+Add to `.vscode/launch.json`:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}
+```
+
+### Debugging Database Queries
+
+Enable query logging in development:
+
+```env
+DB_LOGGING=true
+```
+
+### NATS Event Debugging
+
+View NATS messages:
+
+```bash
+docker exec -it nats nats sub ">"
+```
