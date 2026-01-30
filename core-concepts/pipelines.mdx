@@ -53,15 +53,15 @@ curl -X POST http://localhost:3000/api/v2/knowledgebases/{kbId}/pipelines \
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `name` | ✅ | Pipeline name (max 255 chars) |
-| `description` | ❌ | Optional description |
-| `sourceConnectorConfigId` | ✅ | Source connector configuration |
-| `parserModelConfigId` | ✅ | AI model for parsing |
-| `embeddingModelConfigId` | ✅ | Model for embeddings |
-| `destinationConnectorConfigId` | ✅ | Vector storage destination |
-| `parsingPrompt` | ❌ | Custom parsing instructions |
-| `metadataParsingPrompt` | ❌ | Custom metadata extraction |
-| `isMetadataPrompt` | ❌ | Enable metadata extraction |
+| `name` | <BadgeRequired /> | Pipeline name (max 255 chars) |
+| `description` | <BadgeOptional /> | Optional description |
+| `sourceConnectorConfigId` | <BadgeRequired /> | Source connector configuration |
+| `parserModelConfigId` | <BadgeRequired /> | AI model for parsing |
+| `embeddingModelConfigId` | <BadgeRequired /> | Model for embeddings |
+| `destinationConnectorConfigId` | <BadgeRequired /> | Vector storage destination |
+| `parsingPrompt` | <BadgeRequired /> | Custom parsing instructions |
+| `metadataParsingPrompt` | <BadgeOptional /> | Custom metadata extraction |
+| `isMetadataPrompt` | <BadgeOptional /> | Enable metadata extraction |
 
 ## Scheduling
 
